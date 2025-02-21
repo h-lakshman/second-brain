@@ -1,12 +1,27 @@
 import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import argon2 from "argon2";
+import mongoose from "mongoose";
 
 import { UserModel } from "./db";
 import { signupSchema } from "./zchema";
 
 const app = express();
 app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGODB_URL ?? "mongodb://localhost:27017")
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("Error connecting to MongoDB:", err);
+  });
+
+// Verify the secret is loaded
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET must be defined in environment variables");
+}
 
 app.post("/api/v1/signup", async (req: Request, res: Response) => {
   try {
