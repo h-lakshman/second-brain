@@ -23,7 +23,7 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
   try {
     const result = signupSchema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({
+      res.status(401).json({
         message: "Invalid input",
         errors: result.error.errors,
       });
@@ -33,7 +33,7 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
 
     const existingUser = await UserModel.findOne({ username });
     if (existingUser) {
-      res.status(400).json({
+      res.status(403).json({
         message: "User already exists",
       });
       return;
@@ -45,7 +45,7 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
       password: hashedPassword,
     });
 
-    res.status(201).json({
+    res.status(200).json({
       message: "User created successfully",
       userId: user._id,
     });
@@ -64,14 +64,14 @@ app.post("/api/v1/signin", async (req, res) => {
     const { username, password } = req.body;
     const user = await UserModel.findOne({ username });
     if (!user) {
-      res.status(400).json({
+      res.status(403).json({
         message: "User not found",
       });
       return;
     }
     const isPasswordValid = await argon2.verify(user.password, password);
     if (!isPasswordValid) {
-      res.status(400).json({
+      res.status(403).json({
         message: "Invalid password",
       });
       return;
@@ -102,13 +102,14 @@ app.post("/api/v1/content", authMiddleware, async (req, res) => {
     });
     return;
   }
-  const { link, title } = parseResult.data;
+  const { link, title, type, tags } = parseResult.data;
   try {
     await ContentModel.create({
       link,
       title,
+      type,
       userId: req.userId,
-      tags: [],
+      tags: tags.map((tag) => new mongoose.Types.ObjectId(tag)),
     });
     res.status(201).json({
       message: "Content created successfully",
