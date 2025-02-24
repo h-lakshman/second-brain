@@ -3,8 +3,9 @@ import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import mongoose from "mongoose";
 
-import { UserModel } from "./db";
+import { ContentModel, UserModel } from "./db";
 import { signupSchema } from "./zchema";
+import { authMiddleware } from "./middleware";
 
 const app = express();
 app.use(express.json());
@@ -17,11 +18,6 @@ mongoose
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
   });
-
-// Verify the secret is loaded
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET must be defined in environment variables");
-}
 
 app.post("/api/v1/signup", async (req: Request, res: Response) => {
   try {
@@ -98,7 +94,28 @@ app.post("/api/v1/signin", async (req, res) => {
   }
 });
 
-app.post("/api/v1/content", (req, res) => {});
+app.post("/api/v1/content", authMiddleware, async (req, res) => {
+  const link = req.body.link;   
+  const title = req.body.title;
+  try {
+    await ContentModel.create({
+      link,
+      title,
+      userId: req.userId,
+      tags: [],
+    });
+    res.status(201).json({
+      message: "Content created successfully",
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
+    });
+    console.log(error);
+    return;
+  }
+});
 
 app.get("/api/v1/content", (req, res) => {});
 
