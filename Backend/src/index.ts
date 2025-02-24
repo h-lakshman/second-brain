@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import mongoose from "mongoose";
 
-import { ContentModel, UserModel } from "./db";
+import { ContentModel, TagModel, UserModel } from "./db";
 import { contentSchema, signupSchema } from "./zchema";
 import { authMiddleware } from "./middleware";
 
@@ -104,13 +104,27 @@ app.post("/api/v1/content", authMiddleware, async (req, res) => {
   }
   const { link, title, type, tags } = parseResult.data;
   try {
+    // Get or create tag documents for each tag
+    const tagIds = await Promise.all(
+      tags.map(async (tagTitle) => {
+        let tag = await TagModel.findOne({ title: tagTitle });
+        
+        if (!tag) {
+          tag = await TagModel.create({ title: tagTitle });
+        }
+
+        return tag._id;
+      })
+    );
+
     await ContentModel.create({
       link,
       title,
       type,
       userId: req.userId,
-      tags: tags.map((tag) => new mongoose.Types.ObjectId(tag)),
+      tags: tagIds,
     });
+
     res.status(201).json({
       message: "Content created successfully",
     });
@@ -144,7 +158,31 @@ app.get("/api/v1/content", authMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/v1/content", (req, res) => {});
+app.delete("/api/v1/content", authMiddleware, async (req, res) => {
+  const { contentId } = req.body;
+  try {
+    const content = await ContentModel.findOneAndDelete({
+      _id: contentId,
+      userId: req.userId,
+    });
+    if (!content) {
+      res.status(404).json({
+        message: "Content not found or unauthorized",
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "Content deleted successfully",
+    });
+    return;
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+    });
+    console.log(err);
+    return;
+  }
+});
 
 app.post("/api/v1/brain/share", (req, res) => {});
 
