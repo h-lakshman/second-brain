@@ -123,7 +123,25 @@ app.post("/api/v1/content", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/api/v1/content", (req, res) => {});
+app.get("/api/v1/content", authMiddleware, async (req, res) => {
+  try {
+    const content = await ContentModel.find({ userId: req.userId }).populate(
+      "userId",
+      "username"
+    );
+    res.status(200).json({
+      message: "Content fetched successfully",
+      content,
+    });
+    return;
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+    });
+    console.log(err);
+    return;
+  }
+});
 
 app.delete("/api/v1/content", (req, res) => {});
 
