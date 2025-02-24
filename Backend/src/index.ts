@@ -4,7 +4,7 @@ import argon2 from "argon2";
 import mongoose from "mongoose";
 
 import { ContentModel, UserModel } from "./db";
-import { signupSchema } from "./zchema";
+import { contentSchema, signupSchema } from "./zchema";
 import { authMiddleware } from "./middleware";
 
 const app = express();
@@ -95,8 +95,14 @@ app.post("/api/v1/signin", async (req, res) => {
 });
 
 app.post("/api/v1/content", authMiddleware, async (req, res) => {
-  const link = req.body.link;   
-  const title = req.body.title;
+  const parseResult = contentSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    res.status(400).json({
+      message: "Invalid input",
+    });
+    return;
+  }
+  const { link, title } = parseResult.data;
   try {
     await ContentModel.create({
       link,
