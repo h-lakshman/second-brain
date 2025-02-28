@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import mongoose from "mongoose";
 
-import { ContentModel, TagModel, UserModel } from "./db";
+import { ContentModel, LinkModel, TagModel, UserModel } from "./db";
 import { contentSchema, signupSchema } from "./zchema";
 import { authMiddleware } from "./middleware";
 
@@ -104,18 +104,20 @@ app.post("/api/v1/content", authMiddleware, async (req, res) => {
   }
   const { link, title, type, tags } = parseResult.data;
   try {
-    // Get or create tag documents for each tag
-    const tagIds = await Promise.all(
-      tags.map(async (tagTitle) => {
-        let tag = await TagModel.findOne({ title: tagTitle });
-        
-        if (!tag) {
-          tag = await TagModel.create({ title: tagTitle });
-        }
+    let tagIds: mongoose.Types.ObjectId[] = [];
+    if (tags.length != 0) {
+      tagIds = await Promise.all(
+        tags.map(async (tagTitle) => {
+          let tag = await TagModel.findOne({ title: tagTitle });
 
-        return tag._id;
-      })
-    );
+          if (!tag) {
+            tag = await TagModel.create({ title: tagTitle });
+          }
+
+          return tag._id;
+        })
+      );
+    }
 
     await ContentModel.create({
       link,
@@ -184,9 +186,91 @@ app.delete("/api/v1/content", authMiddleware, async (req, res) => {
   }
 });
 
-app.post("/api/v1/brain/share", (req, res) => {});
+app.post("/api/v1/brain/share", authMiddleware, async (req, res) => {
+  try {
+    const { share } = req.body;
+    if (typeof share !== "boolean") {
+      res.status(400).json({
+        message: "Invalid input",
+      });
+      return;
+    }
+    if (!share) {
+      const deleteLink = await LinkModel.deleteOne({
+        userId: req.userId,
+      });
+      if (deleteLink.deletedCount === 0) {
+        res.status(404).json({
+          message: "There is no shareable link to delete",
+        });
+        return;
+      }
+      res.status(200).json({
+        message: "Link deleted successfully",
+      });
+      return;
+    } else {
+      const existingLink = await LinkModel.findOne({ userId: req.userId });
+      if (existingLink) {
+        res.status(400).json({
+          message: "Link already exists",
+          link: `${process.env.BASE_URL || "http://localhost:3000"}/brain/${
+            existingLink.hash
+          }`,
+        });
+        return;
+      }
+      const hash = crypto.randomUUID();
+      const link = await LinkModel.create({
+        hash,
+        userId: req.userId,
+      });
 
-app.get("/api/v1/brain/:shareLink", (req, res) => {});
+      res.status(200).json({
+        message: "Link created successfully",
+        link: `${process.env.BASE_URL || "http://localhost:3000"}api/v1/brain/${
+          link.hash
+        }`,
+      });
+
+      return;
+    }
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+    });
+    console.log(err);
+    return;
+  }
+});
+
+app.get("/api/v1/brain/:shareLink", authMiddleware, async (req, res) => {
+  const { shareLink } = req.params;
+  try {
+    const link = await LinkModel.findOne({ hash: shareLink });
+    if (!link) {
+      res.status(404).json({
+        message: "Link not found",
+      });
+      return;
+    }
+    const content = await ContentModel.find({ userId: link.userId }).populate(
+      "userId",
+      "username"
+    );
+    res.status(200).json({
+      message: "Content fetched successfully",
+      content,
+    });
+    return;
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+    });
+    console.log(err);
+    return;
+  }
+});
 
 const PORT = 3000;
 app.listen(PORT, () => {
