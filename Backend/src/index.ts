@@ -6,9 +6,19 @@ import mongoose from "mongoose";
 import { ContentModel, LinkModel, TagModel, UserModel } from "./db";
 import { contentSchema, signupSchema } from "./zchema";
 import { authMiddleware } from "./middleware";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: ["http://localhost:5174", "http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 mongoose
   .connect(process.env.MONGODB_URL ?? "mongodb://localhost:27017")
@@ -82,7 +92,7 @@ app.post("/api/v1/signin", async (req, res) => {
     );
     res.status(200).json({
       message: "Login successful",
-      acess_token: token,
+      access_token: token,
     });
     return;
   } catch (error) {
