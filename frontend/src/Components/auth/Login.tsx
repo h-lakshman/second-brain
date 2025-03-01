@@ -17,6 +17,7 @@ import {
 } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+import useAuthStore from "../../store/AuthStore";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,8 +26,9 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuthStore();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("Form submitted!");
     setError("");
@@ -37,8 +39,13 @@ const Login = () => {
     }
     try {
       setLoading(true);
-      // await login(username, password);
-      navigate("/dashboard");
+      await login(username, password);
+      const isAuthenticated = useAuthStore.getState().isAuthenticated;
+      if (isAuthenticated) {
+        navigate("/dashboard");
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
     } catch (err: any) {
       setError("Login failed. Please try again.");
     } finally {
