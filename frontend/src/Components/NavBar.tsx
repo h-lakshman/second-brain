@@ -18,7 +18,7 @@ const NavBar = () => {
           <Button
             color="inherit"
             sx={{ mr: 2 }}
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/register")}
           >
             Signup
           </Button>

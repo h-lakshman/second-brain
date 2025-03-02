@@ -1,58 +1,64 @@
+import { PersonAdd, Visibility, VisibilityOff } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Container,
+  IconButton,
+  InputAdornment,
+  Link,
   Paper,
   TextField,
   Typography,
-  Link,
-  InputAdornment,
-  IconButton,
-  Alert,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  Login as LoginIcon,
-} from "@mui/icons-material";
-import { useState, useEffect } from "react";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/AuthStore";
 
-const Login = () => {
+const Register = () => {
+  const { register, registrationSuccessful } = useAuthStore();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, registrationSuccessful, resetRegistrationState } =
-    useAuthStore();
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    console.log("Form submitted!");
+  useEffect(() => {
+    if (registrationSuccessful) {
+      navigate("/login");
+    }
+  }, [registrationSuccessful, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
 
-    if (registrationSuccessful) {
-      resetRegistrationState();
-    }
-
-    if (!username || !password) {
-      setError("Please enter both username and password");
+    if (!username || !password || !confirmPassword) {
+      setError("Please fill in all fields");
       return;
     }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     try {
       setLoading(true);
-      await login(username, password);
-      const isAuthenticated = useAuthStore.getState().isAuthenticated;
-      if (isAuthenticated) {
-        navigate("/dashboard");
-      } else {
-        setError("Login failed. Please check your credentials.");
-      }
+      await register(username, password);
     } catch (err: any) {
-      setError("Login failed. Please try again.");
+      console.error("Registration error:", err);
+      setError(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -60,15 +66,9 @@ const Login = () => {
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
-  useEffect(() => {
-    return () => {
-      if (registrationSuccessful) {
-        resetRegistrationState();
-      }
-    };
-  }, [registrationSuccessful, resetRegistrationState]);
-
+  const handleToggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper
@@ -91,21 +91,15 @@ const Login = () => {
               fontWeight={600}
               gutterBottom
             >
-              Welocme Back
+              Create an account
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Sign in to continue to your Second Brain
+              Sign up to start organizing your second brain
             </Typography>
           </Box>
-
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
-            </Alert>
-          )}
-          {registrationSuccessful && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Registration successful. Please login.
             </Alert>
           )}
           <TextField
@@ -123,7 +117,6 @@ const Login = () => {
               },
             }}
           />
-
           <TextField
             id="outlined-basic"
             label="Password"
@@ -140,7 +133,6 @@ const Login = () => {
                   <InputAdornment position="end">
                     <IconButton
                       onClick={handleTogglePasswordVisibility}
-                      aria-label="toggle password visibility"
                       edge="end"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -150,12 +142,36 @@ const Login = () => {
               },
             }}
           />
-
+          <TextField
+            id="outlined-basic"
+            label="Confirm Password"
+            variant="outlined"
+            value={confirmPassword}
+            fullWidth
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            type={showConfirmPassword ? "text" : "password"}
+            autoComplete="current-password"
+            slotProps={{
+              input: {
+                sx: { borderRadius: 1.5 },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleToggleConfirmPasswordVisibility}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
           <Button
             type="submit"
             variant="contained"
             disabled={isLoading}
-            startIcon={!isLoading && <LoginIcon />}
+            startIcon={!isLoading && <PersonAdd />}
             sx={{
               py: 1.5,
               borderRadius: 1.5,
@@ -166,9 +182,9 @@ const Login = () => {
             {isLoading ? "Signing in" : "Sign in"}
           </Button>
           <Box sx={{ textAlign: "center", mt: 2 }}>
-            <Typography variant="body2"> Don't have an account? </Typography>
-            <Link component={RouterLink} to="/register" fontWeight={500}>
-              Sign up
+            <Typography variant="body2"> Already have an account? </Typography>
+            <Link component={RouterLink} to="/login" fontWeight={500}>
+              Sign in
             </Link>
           </Box>
         </Box>
@@ -177,4 +193,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
