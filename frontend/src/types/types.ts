@@ -1,8 +1,3 @@
-export interface User {
-  _id: string;
-  username: string;
-}
-
 export interface Tag {
   _id: string;
   title: string;
@@ -14,7 +9,7 @@ export interface Content {
   type: "image" | "video" | "article" | "audio";
   title: string;
   tags: Tag[] | string[];
-  userId: string | User;
+  userId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +17,7 @@ export interface Content {
 export interface AuthResponse {
   message: string;
   access_token?: string;
+  userId?: string;
 }
 
 export interface ContentResponse {

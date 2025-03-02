@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  withCredentials: false,
 });
 
 api.interceptors.request.use(
@@ -25,4 +25,8 @@ api.interceptors.request.use(
 
 export const signin = (username: string, password: string) => {
   return api.post("/signin", { username, password });
+};
+
+export const signup = (username: string, password: string) => {
+  return api.post("/signup", { username, password });
 };
