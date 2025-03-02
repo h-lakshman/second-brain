@@ -1,13 +1,16 @@
 import { create } from "zustand";
-import { AuthResponse, User } from "../types/types";
-import { signin } from "../services/api";
+import { AuthResponse } from "../types/types";
+import { signin, signup } from "../services/api";
 
 interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  registrationSuccessful: boolean;
   login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
+  resetRegistrationState: () => void;
 }
 
 const useAuthStore = create<AuthState>((set) => ({
@@ -15,6 +18,7 @@ const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!localStorage.getItem("token"),
   isLoading: false,
   error: null,
+  registrationSuccessful: false,
   login: async (username: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -37,9 +41,32 @@ const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
         isAuthenticated: false,
       });
-      throw error; // Re-throw to allow the component to catch it
+      throw error;
     }
   },
+  register: async (username: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await signup(username, password);
+      const data = response.data;
+      if (data.userId) {
+        set({
+          isLoading: false,
+          registrationSuccessful: true,
+        });
+      } else {
+        throw new Error("Registration failed");
+      }
+    } catch (err: any) {
+      console.error("Registration error:", err);
+      set({
+        error: err.response?.data?.message || "Registration failed",
+        isLoading: false,
+      });
+      throw err;
+    }
+  },
+  resetRegistrationState: () => set({ registrationSuccessful: false }),
 }));
 
 export default useAuthStore;
