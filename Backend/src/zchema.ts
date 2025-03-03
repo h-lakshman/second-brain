@@ -7,7 +7,7 @@ export const signupSchema = z.object({
 export const contentSchema = z.object({
   link: z.string().url(),
   title: z.string().min(1),
-  type: z.enum(["image", "video", "article", "audio"]),
+  type: z.enum(["image", "video", "article", "audio", "tweet"]),
   tags: z.array(z.string().optional()),
 });
 export const tagSchema = z.object({

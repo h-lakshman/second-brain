@@ -12,7 +12,7 @@ const UserSchema = new Schema({
   },
 });
 
-const contentTypes = ["image", "video", "article", "audio"];
+const contentTypes = ["image", "video", "article", "audio", "tweet"];
 
 const ContentSchema = new Schema({
   link: { type: String, required: true },
