@@ -1,7 +1,8 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./Components/Layout";
-import Home from "./Components/Home";
+import Layout from "./Components/Layout/Layout";
+import Home from "./Pages/Home";
+import Dashboard from "./Pages/Dashboard";
 import Login from "./Components/auth/Login";
 import Register from "./Components/auth/Register";
 import {
@@ -168,6 +169,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </Layout>
       </Router>
