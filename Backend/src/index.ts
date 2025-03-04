@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import mongoose from "mongoose";
@@ -37,7 +37,6 @@ mongoose
 
 app.post("/api/v1/signup", async (req, res) => {
   try {
-
     const result = signupSchema.safeParse(req.body);
     if (!result.success) {
       res.status(401).json({
@@ -159,10 +158,9 @@ app.post("/api/v1/content", authMiddleware, async (req, res) => {
 
 app.get("/api/v1/content", authMiddleware, async (req, res) => {
   try {
-    const content = await ContentModel.find({ userId: req.userId }).populate(
-      "userId",
-      "username"
-    );
+    const content = await ContentModel.find({ userId: req.userId })
+      .populate("userId", "username")
+      .populate("tags", "title");
     res.status(200).json({
       message: "Content fetched successfully",
       content,
@@ -245,9 +243,9 @@ app.post("/api/v1/brain/share", authMiddleware, async (req, res) => {
 
       res.status(200).json({
         message: "Link created successfully",
-        link: `${process.env.BASE_URL || "http://localhost:3000"}api/v1/brain/${
-          link.hash
-        }`,
+        link: `${
+          process.env.BASE_URL || "http://localhost:3000"
+        }/api/v1/brain/${link.hash}`,
       });
 
       return;
@@ -261,33 +259,47 @@ app.post("/api/v1/brain/share", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/api/v1/brain/:shareLink", authMiddleware, async (req, res) => {
+const shareLinkMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const { shareLink } = req.params;
   try {
     const link = await LinkModel.findOne({ hash: shareLink });
     if (!link) {
-      res.status(404).json({
-        message: "Link not found",
-      });
+      res.status(404).json({ message: "Share link not found" });
       return;
     }
-    const content = await ContentModel.find({ userId: link.userId }).populate(
-      "userId",
-      "username"
-    );
-    res.status(200).json({
-      message: "Content fetched successfully",
-      content,
-    });
-    return;
-  } catch (err) {
-    res.status(500).json({
-      message: "Internal server error",
-    });
-    console.log(err);
-    return;
+    // @ts-ignore
+    req.userId = link.userId.toString();
+    next();
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
   }
-});
+};
+
+app.get(
+  "/api/v1/brain/:shareLink",
+  shareLinkMiddleware,
+  async (req: Request, res) => {
+    try {
+      // @ts-ignore
+      const content = await ContentModel.find({ userId: req.userId })
+        .populate("userId", "username")
+        .populate("tags", "title");
+
+      res.status(200).json({
+        message: "Content fetched successfully",
+        content,
+      });
+    } catch (err) {
+      res.status(500).json({
+        message: "Internal server error",
+      });
+    }
+  }
+);
 
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({ status: "ok" });
