@@ -9,7 +9,10 @@ export interface Content {
   type: "image" | "video" | "article" | "audio";
   title: string;
   tags: Tag[] | string[];
-  userId: string;
+  userId: {
+    _id: string;
+    username: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -26,8 +29,8 @@ export interface ContentResponse {
 }
 
 export interface ShareLinkResponse {
+  hash: string;
   message: string;
-  link?: string;
 }
 
 export interface ErrorResponse {

@@ -53,6 +53,10 @@ export const shareContent = (share: boolean) => {
   return api.post("/brain/share", { share });
 };
 
+export const createShareLink = () => {
+  return api.post("/brain/share");
+};
+
 export const getSharedContent = (shareLink: string) => {
   return api.get(`/brain/${shareLink}`);
 };

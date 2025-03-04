@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { AuthResponse } from "../types/types";
 import { signin, signup } from "../services/api";
 
 interface AuthState {

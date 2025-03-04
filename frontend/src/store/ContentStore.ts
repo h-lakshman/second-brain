@@ -3,7 +3,9 @@ import {
   createContent,
   deleteContent,
   getContent,
+  getSharedContent,
   shareContent,
+  createShareLink,
 } from "../services/api";
 import { Content, ContentResponse, ShareLinkResponse } from "../types/types";
 import axios from "axios";
@@ -13,6 +15,7 @@ interface ContentState {
   shareLink: string | null;
   loading: boolean;
   error: string | null;
+  sharedContents: Content[];
   fetchContents: () => Promise<void>;
   addContent: (content: {
     link: string;
@@ -21,10 +24,10 @@ interface ContentState {
     tags: string[];
   }) => Promise<void>;
   removeContent: (contentId: string) => Promise<void>;
-  createShareLink: () => Promise<string>;
+  createShareLink: () => Promise<ShareLinkResponse>;
   removeShareLink: () => Promise<void>;
-  shareContent: (share: boolean) => Promise<string | void>;
-  //   fetchSharedContents: (shareLink: string) => Promise<void>;
+  shareContent: (share: boolean) => Promise<void>;
+  fetchSharedContents: (shareLink: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -33,6 +36,8 @@ const useContentStore = create<ContentState>((set) => ({
   shareLink: null,
   loading: false,
   error: null,
+  sharedContents: [],
+
   addContent: async (content) => {
     try {
       set({ loading: true, error: null });
@@ -78,22 +83,18 @@ const useContentStore = create<ContentState>((set) => ({
     }
   },
   createShareLink: async () => {
-    set({ loading: true, error: null });
     try {
-      const response = await shareContent(true);
+      set({ loading: true, error: null });
+      const response = await createShareLink();
       const data = response.data as ShareLinkResponse;
-      if (data.link) {
-        set({ shareLink: data.link, loading: false });
-        return data.link;
-      }
-      set({ loading: false });
-      throw new Error("Failed to create share link");
-    } catch (err: any) {
+      set({ shareLink: data.hash, loading: false });
+      return data;
+    } catch (error) {
       set({
-        error: err.response?.data?.message || "Failed to create share link",
         loading: false,
+        error: "Failed to create share link",
       });
-      throw err;
+      throw error;
     }
   },
 
@@ -117,19 +118,12 @@ const useContentStore = create<ContentState>((set) => ({
       const data = response.data as ShareLinkResponse;
 
       if (share) {
-        if (data.link) {
-          set({ shareLink: data.link, loading: false });
-          return data.link;
-        }
+        set({ shareLink: data.hash, loading: false });
       } else {
         set({ shareLink: null, loading: false });
       }
 
       set({ loading: false });
-
-      if (share && !data.link) {
-        throw new Error("Failed to create share link");
-      }
     } catch (err: any) {
       const errorMessage = share
         ? "Failed to create share link"
@@ -154,6 +148,24 @@ const useContentStore = create<ContentState>((set) => ({
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Failed to delete content",
+        loading: false,
+      });
+      throw err;
+    }
+  },
+  fetchSharedContents: async (shareLink) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await getSharedContent(shareLink);
+      const data = response.data as ContentResponse;
+      if (data.content) {
+        set({ sharedContents: data.content, loading: false });
+      } else {
+        set({ sharedContents: [], loading: false });
+      }
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || "Failed to fetch shared content",
         loading: false,
       });
       throw err;
