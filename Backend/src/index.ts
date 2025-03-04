@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import mongoose from "mongoose";
+import * as crypto from "node:crypto";
 
 import { ContentModel, LinkModel, TagModel, UserModel } from "./db";
 import { contentSchema, signupSchema } from "./zchema";
@@ -203,58 +204,17 @@ app.delete("/api/v1/content", authMiddleware, async (req, res) => {
 
 app.post("/api/v1/brain/share", authMiddleware, async (req, res) => {
   try {
-    const { share } = req.body;
-    if (typeof share !== "boolean") {
-      res.status(400).json({
-        message: "Invalid input",
-      });
-      return;
-    }
-    if (!share) {
-      const deleteLink = await LinkModel.deleteOne({
-        userId: req.userId,
-      });
-      if (deleteLink.deletedCount === 0) {
-        res.status(404).json({
-          message: "There is no shareable link to delete",
-        });
-        return;
-      }
-      res.status(200).json({
-        message: "Link deleted successfully",
-      });
-      return;
-    } else {
-      const existingLink = await LinkModel.findOne({ userId: req.userId });
-      if (existingLink) {
-        res.status(400).json({
-          message: "Link already exists",
-          link: `${process.env.BASE_URL || "http://localhost:3000"}/brain/${
-            existingLink.hash
-          }`,
-        });
-        return;
-      }
-      const hash = crypto.randomUUID();
-      const link = await LinkModel.create({
-        hash,
-        userId: req.userId,
-      });
-
-      res.status(200).json({
-        message: "Link created successfully",
-        link: `${
-          process.env.BASE_URL || "http://localhost:3000"
-        }/api/v1/brain/${link.hash}`,
-      });
-
-      return;
-    }
+    const hash = crypto.randomBytes(8).toString("hex");
+    await LinkModel.create({ hash, userId: req.userId });
+    res.status(201).json({
+      hash,
+      message: "Link created successfully",
+    });
+    return;
   } catch (err) {
     res.status(500).json({
       message: "Internal server error",
     });
-    console.log(err);
     return;
   }
 });
