@@ -34,11 +34,17 @@ const ShareModal = ({ open, onClose }: ShareModalProps) => {
     setIsShared(Boolean(shareLink));
   }, [shareLink]);
 
-  const handleCopyLink = () => {
-    if (shareLink) {
-      navigator.clipboard.writeText(shareLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const handleShare = async () => {
+    try {
+      if (shareLink) {
+        navigator.clipboard.writeText(shareLink);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        await createShareLink();
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
     }
   };
 
@@ -114,7 +120,7 @@ const ShareModal = ({ open, onClose }: ShareModalProps) => {
               endAdornment: (
                 <InputAdornment position="end">
                   <Button
-                    onClick={handleCopyLink}
+                    onClick={handleShare}
                     color="primary"
                     sx={{ minWidth: "auto", p: 1 }}
                   >

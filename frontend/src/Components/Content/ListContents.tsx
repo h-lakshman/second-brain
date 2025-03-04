@@ -8,7 +8,6 @@ import {
   IconButton,
   CircularProgress,
   Alert,
-  Button,
   Chip,
 } from "@mui/material";
 import {
@@ -18,12 +17,9 @@ import {
   Article as ArticleIcon,
   AudioFile as AudioIcon,
   Twitter as TwitterIcon,
-  Share as ShareIcon,
-  Add as AddIcon,
 } from "@mui/icons-material";
 import useContentStore from "../../store/ContentStore";
 import { Content } from "../../types/types";
-import { Link } from "react-router-dom";
 import ShareModal from "./ShareModal";
 
 interface ContentListProps {
@@ -237,19 +233,6 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
                           color: "text.secondary",
                           p: 0.5,
                           "&:hover": {
-                            color: "primary.main",
-                            bgcolor: "rgba(90, 64, 255, 0.08)",
-                          },
-                        }}
-                      >
-                        <ShareIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        sx={{
-                          color: "text.secondary",
-                          p: 0.5,
-                          "&:hover": {
                             color: "error.main",
                             bgcolor: "rgba(244, 67, 54, 0.08)",
                           },
@@ -278,21 +261,40 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
                     {content.title}
                   </Typography>
 
-                  {content.type === "article" && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mb: 2,
-                        display: "-webkit-box",
-                        overflow: "hidden",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 1,
-                      }}
-                    >
-                      {content.link}
-                    </Typography>
-                  )}
+                  <Typography
+                    variant="body2"
+                    component="a"
+                    href={content.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      mb: 2,
+                      display: "-webkit-box",
+                      overflow: "hidden",
+                      WebkitBoxOrient: "vertical",
+                      WebkitLineClamp: 1,
+                      color: "primary.main",
+                      textDecoration: "none",
+                      "&:hover": {
+                        textDecoration: "underline",
+                      },
+                    }}
+                  >
+                    {(() => {
+                      switch (content.type) {
+                        case "video":
+                          return "Open Video";
+                        case "image":
+                          return "Open Image";
+                        case "article":
+                          return "Open Article";
+                        case "audio":
+                          return "Open Audio";
+                        default:
+                          return "Open Content";
+                      }
+                    })()}
+                  </Typography>
 
                   <Box
                     sx={{ display: "flex", flexWrap: "wrap", gap: 0.8, mt: 2 }}
@@ -320,7 +322,17 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
                     color="text.secondary"
                     sx={{ display: "block", mt: 3 }}
                   >
-                    Added on {new Date(content.createdAt).toLocaleDateString()}
+                    Added on{" "}
+                    {content.createdAt
+                      ? new Date(content.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )
+                      : "Unknown date"}
                   </Typography>
                 </CardContent>
               </Card>
