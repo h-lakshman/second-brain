@@ -11,6 +11,7 @@ import {
   GlobalStyles,
   ThemeProvider,
 } from "@mui/material";
+import SharedContent from "./Pages/SharedContent";
 const theme = createTheme({
   palette: {
     primary: {
@@ -170,6 +171,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/shared/:shareLink" element={<SharedContent />} />
           </Routes>
         </Layout>
       </Router>

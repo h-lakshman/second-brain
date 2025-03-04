@@ -27,8 +27,11 @@ interface ShareModalProps {
 const ShareModal = ({ open, onClose }: ShareModalProps) => {
   const { shareLink, contents, createShareLink, removeShareLink, loading } =
     useContentStore();
-  const [copied, setCopied] = useState(false);
   const [isShared, setIsShared] = useState(Boolean(shareLink));
+  const [copied, setCopied] = useState(false);
+  const shareableLink = shareLink
+    ? `${window.location.origin}/shared/${shareLink}`
+    : "";
 
   useEffect(() => {
     setIsShared(Boolean(shareLink));
@@ -36,8 +39,8 @@ const ShareModal = ({ open, onClose }: ShareModalProps) => {
 
   const handleShare = async () => {
     try {
-      if (shareLink) {
-        navigator.clipboard.writeText(shareLink);
+      if (shareableLink) {
+        navigator.clipboard.writeText(shareableLink);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } else {
@@ -113,7 +116,8 @@ const ShareModal = ({ open, onClose }: ShareModalProps) => {
         {shareLink && (
           <TextField
             fullWidth
-            value={shareLink}
+            disabled
+            value={shareableLink}
             variant="outlined"
             InputProps={{
               readOnly: true,
