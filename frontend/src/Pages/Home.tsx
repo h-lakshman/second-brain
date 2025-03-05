@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -9,6 +9,7 @@ import {
   CardContent,
   Stack,
   useTheme,
+  Alert,
 } from "@mui/material";
 import {
   Psychology as BrainIcon,
@@ -18,11 +19,24 @@ import {
   ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
 import useAuthStore from "../store/AuthStore";
+import { useState, useEffect } from "react";
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const { isAuthenticated } = useAuthStore();
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const state = location.state as { logoutSuccess?: boolean };
+    if (state?.logoutSuccess) {
+      setSuccess("Logged out successfully!");
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    }
+  }, [location]);
 
   const features = [
     {
@@ -71,6 +85,13 @@ const Home = () => {
 
   return (
     <Box sx={{ bgcolor: "background.default" }}>
+      {success && (
+        <Container maxWidth="lg" sx={{ mt: 4 }}>
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        </Container>
+      )}
       <Box
         sx={{
           pt: { xs: 10, md: 16 },

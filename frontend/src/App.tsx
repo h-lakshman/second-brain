@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./Components/Layout/Layout";
 import Home from "./Pages/Home";
 import Dashboard from "./Pages/Dashboard";
@@ -12,6 +12,8 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import SharedContent from "./Pages/SharedContent";
+import ListContents from "./Components/Content/ListContents";
+import ProtectedRoute from "./Components/auth/ProtectedRoute";
 const theme = createTheme({
   palette: {
     primary: {
@@ -170,8 +172,17 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />}>
+              <Route index element={<ListContents />} />
+            </Route>
             <Route path="/shared/:shareLink" element={<SharedContent />} />
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+
+            {/* Redirect for any other routes */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>
       </Router>

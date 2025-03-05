@@ -41,6 +41,7 @@ const ContentForm = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState("");
   const {
     addContent,
     loading: submitLoading,
@@ -73,10 +74,14 @@ const ContentForm = () => {
         type: contentType,
         tags,
       });
+      setSuccess("Content added successfully!");
       setContentUrl("");
       setTitle("");
       setContentType("");
       setTags([]);
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
     } catch (err) {
       console.error("Failed to add content:", err);
     }
@@ -98,6 +103,17 @@ const ContentForm = () => {
       <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 4 }}>
         Add New Content
       </Typography>
+      {success && (
+        <Alert
+          severity="success"
+          sx={{
+            mb: 4,
+            borderRadius: 2,
+          }}
+        >
+          {success}
+        </Alert>
+      )}
       {(serverError || formError) && (
         <Alert
           severity="error"

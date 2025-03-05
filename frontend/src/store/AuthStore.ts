@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { signin, signup } from "../services/api";
+import api, { signin, signup } from "../services/api";
 
 interface AuthState {
   token: string | null;
@@ -67,12 +67,20 @@ const useAuthStore = create<AuthState>((set) => ({
     }
   },
   resetRegistrationState: () => set({ registrationSuccessful: false }),
-  logout: () => {
-    localStorage.removeItem("token");
-    set({
-      token: null,
-      isAuthenticated: false,
-    });
+  logout: async () => {
+    try {
+      localStorage.removeItem("token");
+      set({
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+        registrationSuccessful: false,
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      throw error;
+    }
   },
 }));
 

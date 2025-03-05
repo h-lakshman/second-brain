@@ -37,7 +37,11 @@ const navItems = [
   { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
 ];
 
-const Navbar = () => {
+interface NavbarProps {
+  onLogout: () => void;
+}
+
+const Navbar = ({ onLogout }: NavbarProps) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,9 +64,7 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    handleMenuClose();
-    logout();
-    navigate("/");
+    onLogout();
   };
 
   const handleNavigation = (path: string) => {
@@ -187,7 +189,7 @@ const Navbar = () => {
         sx={{
           zIndex: theme.zIndex.drawer + 1,
           width: "100%",
-          left: 0, 
+          left: 0,
           right: 0,
         }}
       >
@@ -218,7 +220,7 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Mobile App Bar */}
+      {/* Mobile App Bar Only */}
       <AppBar
         position="fixed"
         sx={{
@@ -320,7 +322,7 @@ const Navbar = () => {
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Logout" />
+          <ListItemText>Logout</ListItemText>
         </MenuItem>
       </Menu>
     </>

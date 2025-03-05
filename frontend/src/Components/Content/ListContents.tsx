@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -9,6 +9,12 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  Container,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -22,11 +28,7 @@ import useContentStore from "../../store/ContentStore";
 import { Content } from "../../types/types";
 import ShareModal from "./ShareModal";
 
-interface ContentListProps {
-  contentType?: string;
-}
-
-const ContentList = ({ contentType }: ContentListProps = {}) => {
+const ListContents = () => {
   const {
     contents,
     loading,
@@ -36,6 +38,7 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
     shareContent,
   } = useContentStore();
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [contentType, setContentType] = useState<string>('all');
 
   useEffect(() => {
     fetchContents();
@@ -78,9 +81,15 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
     }
   };
 
-  const filteredContents = contentType
-    ? contents.filter((content) => content.type === contentType)
-    : contents;
+  const handleTypeChange = (event: SelectChangeEvent) => {
+    setContentType(event.target.value);
+  };
+
+  // Filter contents based on selected type
+  const filteredContents = useMemo(() => {
+    if (contentType === 'all') return contents;
+    return contents.filter(content => content.type === contentType);
+  }, [contents, contentType]);
 
   if (loading && contents.length === 0) {
     return (
@@ -103,65 +112,40 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
     : "All Notes";
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
-          flexWrap: { xs: "wrap", sm: "nowrap" },
-          gap: { xs: 2, sm: 0 },
-        }}
-      >
+    <Container maxWidth="lg">
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 4,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
         <Typography variant="h4" fontWeight="bold">
           {pageTitle}
         </Typography>
-        {/*duplicate buttons
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            width: { xs: "100%", sm: "auto" },
-            justifyContent: { xs: "space-between", sm: "flex-end" },
-          }}
-        >
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<ShareIcon />}
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="content-type-label">Filter by Type</InputLabel>
+          <Select
+            labelId="content-type-label"
+            id="content-type-select"
+            value={contentType}
+            label="Filter by Type"
+            onChange={handleTypeChange}
             sx={{
-              bgcolor: "rgba(90, 64, 255, 0.1)",
-              color: "primary.main",
-              "&:hover": {
-                bgcolor: "rgba(90, 64, 255, 0.2)",
+              bgcolor: 'background.paper',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'primary.main',
               },
-              borderRadius: 1.5,
-              px: 2,
-              py: 1,
-              fontWeight: 600,
-            }}
-            onClick={handleShareBrain}
-          >
-            Share Brain
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            component={Link}
-            to="/dashboard"
-            sx={{
-              borderRadius: 1.5,
-              px: 2,
-              py: 1,
-              fontWeight: 600,
             }}
           >
-            Add Content
-          </Button>
-        </Box>
-        */}
+            <MenuItem value="all">All Content</MenuItem>
+            <MenuItem value="tweet">Tweets</MenuItem>
+            <MenuItem value="video">Videos</MenuItem>
+            <MenuItem value="document">Documents</MenuItem>
+            <MenuItem value="link">Links</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       {filteredContents.length === 0 ? (
@@ -345,8 +329,8 @@ const ContentList = ({ contentType }: ContentListProps = {}) => {
         open={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
       />
-    </Box>
+    </Container>
   );
 };
 
-export default ContentList;
+export default ListContents;

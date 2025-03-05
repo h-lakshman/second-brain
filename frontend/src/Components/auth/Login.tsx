@@ -24,33 +24,37 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { login, registrationSuccessful, resetRegistrationState } =
     useAuthStore();
 
+  useEffect(() => {
+    if (registrationSuccessful) {
+      setSuccess("Registration successful! Please login.");
+      resetRegistrationState();
+    }
+  }, [registrationSuccessful, resetRegistrationState]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("Form submitted!");
     setError("");
-
-    if (registrationSuccessful) {
-      resetRegistrationState();
-    }
+    setSuccess("");
 
     if (!username || !password) {
       setError("Please enter both username and password");
       return;
     }
+
     try {
       setLoading(true);
       await login(username, password);
-      const isAuthenticated = useAuthStore.getState().isAuthenticated;
-      if (isAuthenticated) {
+      setSuccess("Login successful! Redirecting...");
+      setTimeout(() => {
         navigate("/dashboard");
-      } else {
-        setError("Login failed. Please check your credentials.");
-      }
+      }, 1000);
     } catch (err: any) {
       setError("Login failed. Please try again.");
     } finally {
@@ -60,14 +64,6 @@ const Login = () => {
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
-  useEffect(() => {
-    return () => {
-      if (registrationSuccessful) {
-        resetRegistrationState();
-      }
-    };
-  }, [registrationSuccessful, resetRegistrationState]);
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
@@ -91,21 +87,21 @@ const Login = () => {
               fontWeight={600}
               gutterBottom
             >
-              Welocme Back
+              Welcome Back
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Sign in to continue to your Second Brain
             </Typography>
           </Box>
 
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
+            </Alert>
+          )}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
-            </Alert>
-          )}
-          {registrationSuccessful && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Registration successful. Please login.
             </Alert>
           )}
           <TextField

@@ -22,6 +22,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -54,6 +55,7 @@ const Register = () => {
     try {
       setLoading(true);
       await register(username, password);
+      navigate("/login");
     } catch (err: any) {
       console.error("Registration error:", err);
       setError(
