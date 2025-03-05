@@ -72,7 +72,13 @@ const Register = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Container
+      maxWidth="sm"
+      sx={{
+        py: 8,
+        mt: { xs: 0, sm: 8 },
+      }}
+    >
       <Paper
         elevation={3}
         sx={{

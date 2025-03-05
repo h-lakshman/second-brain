@@ -22,7 +22,7 @@ const Layout = ({ children }: LayoutProps) => {
       setTimeout(() => {
         navigate("/", { replace: true });
         setIsLoggingOut(false);
-      }, 500); 
+      }, 500);
     } catch (error) {
       console.error("Logout failed:", error);
       setIsLoggingOut(false);
@@ -64,9 +64,9 @@ const Layout = ({ children }: LayoutProps) => {
             ? { sm: `calc(100% - ${drawerWidth}px)` }
             : "100%",
           // ml: isAuthenticated ? { sm: `${drawerWidth}px` } : 0,
-          pt: isAuthenticated ? { xs: 8, sm: 0 } : { xs: 8, sm: 0 },
-          // px: { xs: 2, sm: 3, md: 4 },
-          // pb: 4,
+          pt: isAuthenticated ? { xs: 8, sm: 2 } : { xs: 2, sm: 8 },
+          px: { xs: 1, sm: 3, md: 4 },
+          pb: { xs: 2, sm: 4 },
           overflow: "auto",
           bgcolor: "background.default",
           transition: "margin 0.2s ease-in-out, width 0.2s ease-in-out",
